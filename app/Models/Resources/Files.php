@@ -48,7 +48,7 @@ class Files
                             }
 
                             $pathFile = $pathDir . '/' . $file;
-                            if (file_exists($pathFile)) {
+                            if (file_exists($pathFile) && is_file($pathFile)) {
                                 $result[] = [
                                     'name' => $file,
                                     'path' => $pathDir,
