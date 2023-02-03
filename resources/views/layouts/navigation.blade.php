@@ -1,43 +1,21 @@
-<nav class="uk-flex uk-flex-between">
-
-    <div class="">
-        <div class="uk-grid">
-            <!-- Logo -->
-            <div class="uk-text-center">
-                <a href="{{ route('dashboard') }}">
-                    main
-                </a>
-            </div>
+<div class="uk-container uk-margin-bottom">
+    <nav class="uk-navbar-container" uk-navbar>
+        <div class="uk-navbar-left">
+            <ul class="uk-navbar-nav">
+                <li class="uk-active"><a href="{{ route('files.index') }}">Files</a></li>
+                <li class="uk-active"><a href="{{ route('folders.index') }}">Folders</a></li>
+            </ul>
         </div>
-    </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div>
-
-
-        <!-- Responsive Settings Options -->
-        <div class="uk-grid">
-            <div class="uk-grid">
-                <div>{{ Auth::user()->name }}</div>
-                <div>{{ Auth::user()->email }}</div>
-            </div>
-
-            <div>
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
+        <div class="uk-navbar-right">
+            <ul class="uk-navbar-nav">
+                <li>
+                    <a>{{ Auth::user()->email }}</a>
+                </li>
+                <li>
+                    <a href="#">Logout</a>
+                </li>
+            </ul>
         </div>
-    </div>
-</nav>
+    </nav>
+</div>

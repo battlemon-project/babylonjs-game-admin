@@ -38,7 +38,7 @@ class UploadResourcesController extends Controller
         return true;
     }
 
-    public function uploadFile($request, $name, $path, $fileName)
+    public function uploadFile(Request $request, $name, $path, $fileName)
     {
         if ($request->file($name)) {
             $request->file($name)
