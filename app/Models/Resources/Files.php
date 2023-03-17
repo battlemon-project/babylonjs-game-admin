@@ -34,6 +34,12 @@ class Files
         $result = [];
 
         foreach ($files as $file) {
+            if ($params->get('name')) {
+                if (!str_contains(basename($file), $params->get('name'))) {
+                    continue;
+                }
+            }
+
             $result[] = [
                 'name' => basename($file),
                 'path' => $path,
