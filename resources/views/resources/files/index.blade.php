@@ -11,7 +11,6 @@
 
                     <div>
                         <select class="uk-select" name="folder">
-                            <option value="">- folder -</option>
                             @foreach($folders as $folder)
                                 <option value="{{ $folder }}" @if(request('folder') == $folder)selected @endif>
                                     {{ $folder }}

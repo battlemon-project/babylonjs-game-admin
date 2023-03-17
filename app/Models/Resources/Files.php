@@ -1,6 +1,7 @@
 <?php
 namespace App\Models\Resources;
 
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -18,38 +19,25 @@ class Files
         return true;
     }
 
+    /**
+     * @throws Exception
+     */
     public static function getList(Collection $params): array
     {
-        $path = config('game.resources_path');
-        $dirs = Storage::directories($path);
+        if (!$params->get('folder')) {
+            throw new Exception('Folder parameter is required');
+        }
+
+        $path = config('game.resources_path') . '/' . $params->get('folder');
         $files = Storage::allFiles($path);
 
         $result = [];
 
         foreach ($files as $file) {
-            $dir = dirname($file);
-            if (!in_array($dir, $dirs)) {
-                continue;
-            }
-
-            if (basename($file) === '.DS_Store') {
-                continue;
-            }
-
-            if ($params->get('folder') && $params->get('folder') !== basename($dir)) {
-                continue;
-            }
-
-            if ($params->has('name')) {
-                if (!str_contains(basename($file), $params->get('name'))) {
-                    continue;
-                }
-            }
-
             $result[] = [
                 'name' => basename($file),
-                'path' => $dir,
-                'folder' => basename($dir),
+                'path' => $path,
+                'folder' => $params->get('folder'),
                 'date_time' => date("d.m.Y H:i:s", Storage::lastModified($file))
             ];
         }
@@ -57,6 +45,10 @@ class Files
         return $result;
     }
 
+
+    /**
+     * @throws Exception
+     */
     public static function getListData($params): array
     {
         $params = collect($params);

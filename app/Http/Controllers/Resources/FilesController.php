@@ -11,13 +11,22 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FilesController extends Controller
 {
-    public function index(Request $request): Factory|View|Application
+    public function index(Request $request): View|Factory|Redirector|Application|RedirectResponse
     {
+        if (!$request->get('folder')) {
+            $path = config('game.resources_path');
+            $directories = Storage::directories($path);
+            $firstDirectory = basename($directories[0]);
+
+            return redirect(route('files.index', ['folder' => $firstDirectory]));
+        }
+
         return view('resources.files.index', Files::getListData($request->all()));
     }
 
