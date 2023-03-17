@@ -2,19 +2,13 @@
 
 namespace App\Models\Resources;
 
-use JetBrains\PhpStorm\ArrayShape;
-use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
-use Symfony\Component\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Storage;
 
 class Folders {
     public static function install(): bool
     {
-        $filesystem = new Filesystem();
-
-        try {
-            $filesystem->mkdir(config('game.resources_path'));
-        } catch (IOExceptionInterface $exception) {
-            echo "An error occurred while creating your directory at " . $exception->getPath();
+        if (!Storage::exists(config('game.resources_path'))) {
+            Storage::makeDirectory(config('game.resources_path'));
         }
 
         return true;
@@ -22,48 +16,37 @@ class Folders {
 
     public static function getList(): array
     {
-        $path = base_path(config('game.resources_path'));
-        $dirs = scandir(base_path(config('game.resources_path')));
+        $dirs = Storage::directories(config('game.resources_path'));
         $result = [];
 
         foreach ($dirs as $dir) {
-            if ($dir != '.' && $dir != '..') {
-                if (is_dir($path . '/' . $dir)) {
-                    $result[] = [
-                        'name' => $dir,
-                        'path' => $path
-                    ];
-                }
-            }
+            $name = basename($dir);
+            $result[] = [
+                'name' => $name,
+                'path' => $dir
+            ];
         }
 
         return $result;
     }
 
-    #[ArrayShape(['folders' => "array"])] public static function getListData()
+    public static function getListData(): array
     {
         return [
-          'folders' => self::getList()
+            'folders' => self::getList()
         ];
     }
 
     public static function create($folderName): array
     {
-        $path = base_path(config('game.resources_path'));
-        $folderPath = $path . '/' . $folderName;
+        $folderPath = config('game.resources_path') . '/' . $folderName;
         $error = null;
         $status = null;
 
-        if (!is_dir($path)) {
-            $error = 'Error path, not exist: ' . $path;
-        }
-
-        if (is_dir($folderPath)) {
+        if (Storage::exists($folderPath)) {
             $error = 'Error folder, is exist ' . $folderPath;
-        }
-
-        if (!$error) {
-            $status = mkdir($folderPath, 0775);
+        } else {
+            $status = Storage::makeDirectory($folderPath);
         }
 
         return compact('status', 'error');
@@ -71,21 +54,17 @@ class Folders {
 
     public static function edit($oldName, $newName): array
     {
-        $path = base_path(config('game.resources_path'));
-        $folderPath = $path . '/' . $oldName;
+        $oldPath = config('game.resources_path') . '/' . $oldName;
+        $newPath = config('game.resources_path') . '/' . $newName;
         $error = null;
         $status = null;
 
-        if (!is_dir($path)) {
-            $error = 'Error path, is not exist: ' . $path;
-        }
-
-        if (!is_dir($folderPath)) {
-            $error = 'Error folder, is not exist ' . $folderPath;
-        }
-
-        if (!$error) {
-            $status = rename($folderPath, $path . '/' . $newName);
+        if (!Storage::exists($oldPath)) {
+            $error = 'Error folder, is not exist ' . $oldPath;
+        } elseif (Storage::exists($newPath)) {
+            $error = 'Error folder, is exist ' . $newPath;
+        } else {
+            $status = Storage::move($oldPath, $newPath);
         }
 
         return compact('status', 'error');
@@ -93,31 +72,18 @@ class Folders {
 
     public static function delete($folderName): array
     {
-        $path = base_path(config('game.resources_path'));
-        $folderPath = $path . '/' . $folderName;
+        $folderPath = config('game.resources_path') . '/' . $folderName;
         $status = null;
         $error = null;
 
-        if (!self::dirIsEmpty($folderPath)) {
+        if (!Storage::exists($folderPath)) {
+            $error = 'Error folder, is not exist ' . $folderPath;
+        } elseif (!Storage::deleteDirectory($folderPath)) {
             $error = 'Directory is not empty';
-        }
-
-        if (!$error) {
-            $status = rmdir($folderPath);
+        } else {
+            $status = true;
         }
 
         return compact('status', 'error');
-    }
-
-    public static function dirIsEmpty($dir) {
-        $handle = opendir($dir);
-        while (false !== ($entry = readdir($handle))) {
-            if ($entry != "." && $entry != "..") {
-                closedir($handle);
-                return false;
-            }
-        }
-        closedir($handle);
-        return true;
     }
 }

@@ -1,23 +1,18 @@
 <?php
-
 namespace App\Models\Resources;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
-use JetBrains\PhpStorm\ArrayShape;
-use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
-use Symfony\Component\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Storage;
 
 class Files
 {
     public static function install(): bool
     {
-        $filesystem = new Filesystem();
+        $path = config('game.resources_path');
 
-        try {
-            $filesystem->mkdir(config('game.resources_path'));
-        } catch (IOExceptionInterface $exception) {
-            echo "An error occurred while creating your directory at " . $exception->getPath();
+        if (!Storage::exists($path)) {
+            Storage::makeDirectory($path);
         }
 
         return true;
@@ -25,40 +20,31 @@ class Files
 
     public static function getList(Collection $params): array
     {
-        $path = base_path(config('game.resources_path'));
-        $dirs = scandir(base_path(config('game.resources_path')));
+        $path = config('game.resources_path');
+        $dirs = Storage::directories($path);
+
         $result = [];
 
         foreach ($dirs as $dir) {
-            if ($dir != '.' && $dir != '..') {
-                if ($params->get('folder') && $params->get('folder') !== $dir) {
-                    continue;
-                }
+            if ($params->get('folder') && $params->get('folder') !== basename($dir)) {
+                continue;
+            }
 
-                if (is_dir($path . '/' . $dir)) {
-                    $files = scandir($path . '/' . $dir);
-                    $pathDir = $path . '/' . $dir;
+            $files = Storage::files($dir);
 
-                    foreach ($files as $file) {
-                        if ($file != '.' && $file != '..') {
-                            if ($params->has('name')) {
-                                if (!str_contains($file, $params->get('name'))){
-                                    continue;
-                                }
-                            }
-
-                            $pathFile = $pathDir . '/' . $file;
-                            if (file_exists($pathFile) && is_file($pathFile)) {
-                                $result[] = [
-                                    'name' => $file,
-                                    'path' => $pathDir,
-                                    'folder' => $dir,
-                                    'date_time' => date("d.m.Y H:i:s", filemtime($pathFile))
-                                ];
-                            }
-                        }
+            foreach ($files as $file) {
+                if ($params->has('name')) {
+                    if (!str_contains(basename($file), $params->get('name'))) {
+                        continue;
                     }
                 }
+
+                $result[] = [
+                    'name' => basename($file),
+                    'path' => $dir,
+                    'folder' => basename($dir),
+                    'date_time' => date("d.m.Y H:i:s", Storage::lastModified($file))
+                ];
             }
         }
 
@@ -77,12 +63,12 @@ class Files
 
     public static function create($folderName, UploadedFile $file, $fileName): array
     {
-        $path = base_path(config('game.resources_path'));
+        $path = config('game.resources_path');
         $folderPath = $path . '/' . $folderName;
         $error = null;
         $status = null;
 
-        if (!is_dir($folderPath)) {
+        if (!Storage::exists($folderPath)) {
             $error = 'Error folder, not exist: ' . $path;
         }
 
@@ -91,7 +77,7 @@ class Files
                 $fileName = $file->getClientOriginalName();
             }
 
-            $status = $file->move($folderPath, $fileName);
+            $status = Storage::putFileAs($folderPath, $file, $fileName);
         }
 
         return compact('status', 'error');
@@ -103,12 +89,12 @@ class Files
         $status = null;
         $error = null;
 
-        if (!file_exists($filePath)) {
+        if (!Storage::exists($filePath)) {
             $error = 'File is not exist';
         }
 
         if (!$error) {
-            $status = unlink($filePath);
+            $status = Storage::delete($filePath);
         }
 
         return compact('status', 'error');
@@ -122,7 +108,7 @@ class Files
 
     public static function getFilePath($folder, $file): string
     {
-        $path = base_path(config('game.resources_path'));
+        $path = Storage::path(config('game.resources_path'));
         $folderPath = $path . '/' . $folder;
         return $folderPath . '/' . $file;
     }

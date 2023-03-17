@@ -23,3 +23,7 @@ yarn-error.log
 /.cache
 packages
 packages/*
+.config
+.ssh
+.bash_history
+.composer
