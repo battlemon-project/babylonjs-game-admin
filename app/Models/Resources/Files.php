@@ -84,6 +84,8 @@ class Files
             $status = Storage::putFileAs($folderPath, $file, $fileName);
         }
 
+        self::makeManifest();
+
         return compact('status', 'error');
     }
 
@@ -101,6 +103,8 @@ class Files
             $status = Storage::delete($filePath);
         }
 
+        self::makeManifest();
+
         return compact('status', 'error');
     }
 
@@ -112,8 +116,21 @@ class Files
 
     public static function getFilePath($folder, $file): string
     {
-        $path = Storage::path(config('game.resources_path'));
-        $folderPath = $path . '/' . $folder;
-        return $folderPath . '/' . $file;
+        return config('game.resources_path')  . '/' . $folder . '/' . $file;
+    }
+
+    public static function makeManifest()
+    {
+        $path = config('game.resources_path');
+        $files = Storage::allFiles($path);
+        $manifest = [];
+
+        foreach ($files as $file) {
+            $name = str_replace($path . '/', '', $file);
+            $manifest[$name] = Storage::lastModified($file);
+        }
+
+        $data = json_encode($manifest, JSON_PRETTY_PRINT);
+        Storage::put($path . '/manifest.json', $data);
     }
 }

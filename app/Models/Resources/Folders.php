@@ -67,6 +67,8 @@ class Folders {
             $status = Storage::move($oldPath, $newPath);
         }
 
+        Files::makeManifest();
+
         return compact('status', 'error');
     }
 
@@ -83,6 +85,8 @@ class Folders {
         } else {
             $status = true;
         }
+
+        Files::makeManifest();
 
         return compact('status', 'error');
     }
