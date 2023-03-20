@@ -30,10 +30,12 @@ class FilesController extends Controller
         return view('resources.files.index', Files::getListData($request->all()));
     }
 
-    public function create(): Factory|View|Application
+    public function create(Request $request): Factory|View|Application
     {
         $folders = Files::getFoldersForSelect();
-        return view('resources.files.create', compact('folders'));
+        $folder = $request->get('folder');
+
+        return view('resources.files.create', compact('folder','folders'));
     }
 
     /**
@@ -49,7 +51,7 @@ class FilesController extends Controller
         $create = Files::create($folder, $file, $request->get('file_name_in_game'));
 
         if (!$create['error']) {
-            return redirect(route('files.index', compact('folder')))
+            return redirect(route('files.create', compact('folder')))
                 ->with('message', 'File created');
         }
 
