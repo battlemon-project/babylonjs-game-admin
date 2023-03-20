@@ -52,7 +52,7 @@ class FilesController extends Controller
 
         if (!$create['error']) {
             return redirect(route('files.create', compact('folder')))
-                ->with('message', 'File created');
+                ->with('message', 'File ' . $file->getClientOriginalName() . '  created');
         }
 
         return back()->with('error', 'File not created: ' . $create['error']);
