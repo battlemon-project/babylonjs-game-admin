@@ -1,6 +1,7 @@
 <?php
 namespace App\Models\Resources;
 
+use App\Jobs\MakeManifestJob;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -84,7 +85,7 @@ class Files
             $status = Storage::putFileAs($folderPath, $file, $fileName);
         }
 
-        self::makeManifest();
+        MakeManifestJob::dispatch();
 
         return compact('status', 'error');
     }
